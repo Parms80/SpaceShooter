@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script src="loading.js"></script>
+<script src="projectile.js"></script>
+<script src="player.js"></script>
+<script src="enemy.js"></script>
+<script src="objectSpawner.js"></script>
+<script src="sound.js"></script>
+<script src="gameOver.js"></script>
+<script src="energyBars.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<style>
+canvas {
+    border:1px solid #d3d3d3;
+    background-color: #000000;
+}
+</style>
+</head>
+<body onload="startGame()">
+	<script>
+		var numWorldUnitsX = 100;
+		var xScale = window.innerWidth / numWorldUnitsX;
+		var yScale = window.innerWidth / numWorldUnitsX;
+		var playerShip;
+		var shootRate = 10;
+     	var bullets = new Array(5);
+     	var bulletSpawner;
+		var enemyShips = new Array(5);
+     	var enemySpawner;
+     	var enemySpawnRate = 20;
+     	var gameState;
+		const GAMESTATE_LOADING = 0;
+     	const GAMESTATE_GAMEPLAY = 1;
+		const GAMESTATE_GAMEOVER = 2;
+
+		function startGame() {
+		    myGameArea.start();
+    		playerShip = new PlayerShip(5, 5, 
+    			"Sprites/player.png", 
+    			75, window.innerHeight/yScale - 10, 
+    			"image");
+
+    		for (var i = 0; i < enemyShips.length; i++) {
+	    		enemyShips[i] = new EnemyShip(5, 5, 
+	    			"Sprites/enemy.png", 
+	    			0, 0, 
+	    			"image",
+	    			1);
+	    	};
+    		enemySpawner = new ObjectSpawner(enemyShips, enemySpawnRate);
+
+    		for (i = 0; i < bullets.length; i++) {
+    			bullets[i] = new Projectile(2,2, "Sprites/bullet.png", playerShip.worldXPos, playerShip.worldYPos, "image", -1);
+    		}
+    		bulletSpawner = new ObjectSpawner(bullets, shootRate);	
+    		gameState = GAMESTATE_LOADING;	
+    	}
+
+		var myGameArea = {
+		    canvas : document.createElement("canvas"),
+		    start : function() {
+		        this.canvas.width = window.innerWidth;
+		        this.canvas.height = window.innerHeight;
+		        // this.canvas.style.cursor = "none";
+		        this.context = this.canvas.getContext("2d");
+		        document.body.insertBefore(this.canvas, document.body.childNodes[0]);
+		        this.interval = setInterval(updateGameArea, 20);
+		        window.addEventListener('mousemove', function (e) {
+		            myGameArea.x = e.pageX;
+		        }),
+		        window.addEventListener('touchmove', function (e) {
+		            myGameArea.x = e.touches[0].screenX;
+		        }),
+		        window.addEventListener('click', function(e) {
+		        	if (gameState == GAMESTATE_GAMEOVER) {
+		        		restartGame();
+		        	}
+		        }, false);
+		    },
+		    clear : function() {
+		        this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+		    }
+		}
+
+		function restartGame() {
+			playerShip.reset();
+			bulletSpawner.reset();
+			enemySpawner.reset();
+		    gameState = GAMESTATE_GAMEPLAY;
+		}
+
+		function updateGameArea() {
+		    myGameArea.clear();
+
+		    switch (gameState) {
+
+		    	case GAMESTATE_LOADING:
+		    		showLoading();
+		    	break;
+
+		    	case GAMESTATE_GAMEPLAY:
+				    playerShip.updatePlayerShip();
+				    bulletSpawner.updateObjects();
+				    enemySpawner.updateObjects();
+
+				    playerShip.drawPlayerShip();
+				    bulletSpawner.drawObjects();
+				    enemySpawner.drawObjects();
+				    drawEnergyBars();
+			    break;
+
+			    case GAMESTATE_GAMEOVER:
+			    	showGameOver();
+			    break;
+			}
+		}
+	</script>
+
+</body>
+</html>
